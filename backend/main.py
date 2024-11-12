@@ -49,6 +49,7 @@ def stream_response(stream, session):
 
     msg = ChatMessage(contents=answer, is_ai=True)
     session.add(msg)
+    session.commit()
 
 @app.get('/api/users/{user_id}/{document_id}/messages')
 def get_messages(
@@ -106,6 +107,7 @@ def answer(
     if not doc:
         return {"message": "No existe el documento"}
 
+    # FIXME: message creation
     msg = ChatMessage(contents=question.text, is_ai=False, document_id=question.document_id)
     session.add(msg)
     session.commit()
