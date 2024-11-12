@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Logo } from "@/features/ui/logo";
 import { MoveRight, UploadCloud } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 
@@ -7,6 +8,9 @@ export default function Home() {
   return (
     <main className="w-full h-auto grid place-items-center">
       <section className="flex justify-center w-full items-center flex-col gap-4 p-8 md:p-24 lg:p-36">
+        <span className="border-2 p-2 rounded-full font-sans-accent px-3 hover:bg-primary-foreground flex items-center gap-2 text-xl">
+          <Logo />
+        </span>
         <h1 className="text-7xl max-w-[30ch] font-sans-accent font-bold animate-in m-7 text-center drop-shadow-lg z-1">
           Chatea con tus documentos. Aprovecha el potencial de la{" "}
           <span>IA</span>
@@ -26,7 +30,7 @@ export default function Home() {
 
       <section className="w-full flex justify-center items-center m-4">
         <div className="w-[80%] border border-1 rounded-md shadow-lg p-8 flex gap-2">
-          <div className="py-4">
+          <div className="py-4 px-5">
             <h2
               className="text-4xl font-sans-accent font-bold scroll-smooth"
               id="drag-drop"
@@ -72,10 +76,10 @@ export function DragAndDrop() {
           </div>
 
           <p className="mt-2 text-sm text-gray-600">
-            <span className="font-semibold">Drag files</span>
+            <span className="font-semibold">Arrastra archivos</span>
           </p>
           <p className="text-xs text-gray-500">
-            Click to upload files &#40;files should be under 10 MB &#41;
+            Haga click para subir un archivo.
           </p>
         </div>
       </label>
