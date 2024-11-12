@@ -1,3 +1,5 @@
 **/__pycache__
 chroma_db_dir
 data.db
+documents/
+chroma_db
