@@ -15,7 +15,7 @@ def on_startup():
     create_db_and_tables()
 
 
-app = FastAPI(on_startup=on_startup)
+app = FastAPI(on_startup=[on_startup])
 
 app.add_middleware(
     CORSMiddleware,
@@ -43,7 +43,7 @@ def stream_response(stream, session):
     msg = ChatMessage(contents=answer, is_ai=True)
     session.add(msg)
 
-@app.get('/messages')
+@app.get('/api/messages')
 def get_messages(
     session: SessionDep
 ):
