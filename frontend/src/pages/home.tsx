@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/features/ui/logo";
+import { useStore } from "@/features/user/store";
 import { MoveRight, UploadCloud } from "lucide-react";
+import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
+import { useNavigate } from "react-router-dom";
 
 export default function Home() {
   return (
@@ -48,10 +51,6 @@ export default function Home() {
                 <img src="/icons/pdf.png" className="h-8 w-8" />
                 <span className="text-xl text-bold">PDF</span>
               </div>
-              <div className="flex gap-2 border border-1 rounded-full p-4 me-5 my-3">
-                <img src="/icons/docx.png" className="h-8 w-8" />
-                <span className="text-xl text-bold">DOCX</span>
-              </div>
             </div>
           </div>
           <DragAndDrop />
@@ -62,7 +61,52 @@ export default function Home() {
 }
 
 export function DragAndDrop() {
-  const { getRootProps, getInputProps } = useDropzone();
+  const navigate = useNavigate();
+
+  const userState = useStore((state) => state);
+
+  console.log(userState);
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    try {
+      const file = acceptedFiles[0];
+
+      const formData = new FormData();
+
+      formData.append("file", file);
+      if (userState.user_id)
+        formData.append("user_id", userState.user_id || "");
+
+      console.log({ formData: Object.fromEntries(formData) });
+
+      const response = await fetch("http://localhost:8000/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      console.log({ response });
+
+      if (!response.ok || response.status === 400) {
+        throw new Error("Error al subir el archivo.");
+      }
+
+      const data = await response.json();
+
+      console.log({ data });
+
+      userState.setUser(data.user_id);
+
+      // navigate(`/chat/${data.id}`);
+
+      navigate({
+        pathname: `/chat/${data.id}`,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  }, []);
+
+  const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
   return (
     <div className="w-1/2">
@@ -87,7 +131,7 @@ export function DragAndDrop() {
       <Input
         {...getInputProps()}
         id="dropzone-file"
-        accept="image/png, image/jpeg"
+        accept="application/pdf"
         type="file"
         className="hidden"
       />
