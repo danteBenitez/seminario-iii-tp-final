@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/features/ui/logo";
 import { useStore } from "@/features/user/store";
+import { useQueryClient } from "@tanstack/react-query";
 import { MoveRight, UploadCloud } from "lucide-react";
 import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
@@ -65,7 +66,7 @@ export function DragAndDrop() {
 
   const userState = useStore((state) => state);
 
-  console.log(userState);
+  const useClient = useQueryClient();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     try {
@@ -77,14 +78,10 @@ export function DragAndDrop() {
       if (userState.user_id)
         formData.append("user_id", userState.user_id || "");
 
-      console.log({ formData: Object.fromEntries(formData) });
-
       const response = await fetch("http://localhost:8000/api/upload", {
         method: "POST",
         body: formData,
       });
-
-      console.log({ response });
 
       if (!response.ok || response.status === 400) {
         throw new Error("Error al subir el archivo.");
@@ -92,11 +89,9 @@ export function DragAndDrop() {
 
       const data = await response.json();
 
-      console.log({ data });
-
       userState.setUser(data.user_id);
 
-      // navigate(`/chat/${data.id}`);
+      useClient.invalidateQueries(["documents", { user_id: data.user_id }]);
 
       navigate({
         pathname: `/chat/${data.id}`,
