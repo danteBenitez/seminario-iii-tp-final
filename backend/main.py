@@ -1,10 +1,9 @@
 from typing import Union, Annotated
 
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File, Form, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from validation.question_validation import Question
-
 
 from model import LLModel
 from db.chat_model import ChatMessage
@@ -64,9 +63,10 @@ def get_messages(
 
 @app.post('/api/upload', response_model=Union[DocumentPublic, dict])
 async def upload_document(
+    background: BackgroundTasks,
     session: SessionDep,
     file: UploadFile,
-    user_id: Annotated[str | None, Form()] = ""
+    user_id: Annotated[str | None, Form()] = "",
 ): 
     if not user_id or len(user_id) <= USER_ID_LEN:
         user_id = randbytes(USER_ID_LEN).hex()
@@ -84,11 +84,12 @@ async def upload_document(
     full_path = pathlib.Path("./documents", str(doc.id))
     doc.file_path = str(full_path)
 
-
     with open(full_path, "wb") as f:
         f.write(await file.read())
 
-    LLModel.create_collection(str(doc.id), str(doc.id), doc.mime_type)
+    print("Subido archivo")
+    # Start the collection creation on the background to speed up the document returning.
+    background.add_task(LLModel.create_collection, str(doc.id), str(doc.id), doc.mime_type)
 
     return doc
 
