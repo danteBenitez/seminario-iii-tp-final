@@ -101,7 +101,7 @@ async def get_my_documents(
     docs = session.exec(select(Document).where(Document.user_id==user_id))
     return docs
 
-@app.get('/api/users/{user_id}/documents/{document_id}', response_model=list[DocumentPublic])
+@app.get('/api/users/{user_id}/documents/{document_id}', response_model=DocumentPublic)
 async def get_my_document(
     session: SessionDep,
     user_id: str,
