@@ -9,6 +9,7 @@ class DocumentBase(SQLModel, table=False):
 class Document(DocumentBase, table=True):
     file_path: str = Field(index=True)
     original_filename: str = Field()
+    mime_type: str = Field()
 
     messages: list["ChatMessage"] = Relationship()
 

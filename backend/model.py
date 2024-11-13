@@ -1,6 +1,6 @@
 import chromadb.errors
 from langchain_ollama import ChatOllama
-from langchain_community.document_loaders import PyMuPDFLoader
+from langchain_community.document_loaders import PyMuPDFLoader, Docx2txtLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_chroma import Chroma
@@ -41,12 +41,17 @@ prompt = PromptTemplate(
 
 combine_documents = create_stuff_documents_chain(llm, prompt)
 
+MIME_TO_LOADER = {
+    "application/pdf": PyMuPDFLoader,
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": Docx2txtLoader
+}
+
 class LLModel:
     @staticmethod
-    def answer_with_context_from(document_name: str, question: str, collection_name: str):
+    def answer_with_context_from(document_name: str, question: str, collection_name: str, content_type: str):
         file_path = pathlib.Path("./documents", f"{document_name}")
         try:
-            loader = PyMuPDFLoader(str(file_path.absolute()))
+            loader = MIME_TO_LOADER[content_type](str(file_path.absolute()))
         except Exception as err:
             print("Error al cargar PDF: ", err)
             raise err
@@ -77,9 +82,9 @@ class LLModel:
         return qa.stream({"input":question})
 
     @staticmethod
-    def create_collection(collection_name: str, document_name: str):
+    def create_collection(collection_name: str, document_name: str, content_type: str):
         file_path = pathlib.Path("./documents", document_name)
-        loader = PyMuPDFLoader(file_path)
+        loader = MIME_TO_LOADER[content_type](file_path)
         data_pdf = loader.load()
 
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=500) 

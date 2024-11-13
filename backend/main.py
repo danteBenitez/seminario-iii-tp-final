@@ -4,11 +4,13 @@ from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from validation.question_validation import Question
+
+
 from model import LLModel
 from db.chat_model import ChatMessage
 from db.document_model import Document, DocumentPublic
 from db.connection import create_db_and_tables, SessionDep
-from sqlmodel import select
+from sqlmodel import select, Session
 from random import randbytes
 
 import pathlib
@@ -33,7 +35,7 @@ app.add_middleware(
 
 pathlib.Path('./documents').mkdir(exist_ok=True, parents=True)
 
-def stream_response(stream, session):
+def stream_response(stream, session: Session, doc: Document):
     answer = ""
     for chunk in stream:
         dict = {}
@@ -47,7 +49,7 @@ def stream_response(stream, session):
 
         yield f"{dumps(dict)}\n"
 
-    msg = ChatMessage(contents=answer, is_ai=True)
+    msg = ChatMessage(contents=answer, is_ai=True, document_id=doc.id)
     session.add(msg)
     session.commit()
 
@@ -64,15 +66,16 @@ def get_messages(
 async def upload_document(
     session: SessionDep,
     file: UploadFile,
-    user_id: Annotated[str | None, Form()]
+    user_id: Annotated[str | None, Form()] = ""
 ): 
     if not user_id or len(user_id) <= USER_ID_LEN:
         user_id = randbytes(USER_ID_LEN).hex()
 
-    if file.content_type != "application/pdf":
+    # FIXME: Validate MIME Type correctly 
+    if not file.content_type or (file.content_type != "application/pdf" and file.content_type != "application/vnd.openxmlformats-officedocument.wordprocessingml.document"):
         return {"message": "Tipo de archivo inválido"}
 
-    doc = Document(file_path="", user_id=user_id, original_filename=file.filename)
+    doc = Document(file_path="", user_id=user_id, original_filename=file.filename, mime_type=file.content_type)
 
     session.add(doc)
     session.commit()
@@ -85,7 +88,7 @@ async def upload_document(
     with open(full_path, "wb") as f:
         f.write(await file.read())
 
-    LLModel.create_collection(str(doc.id), str(doc.id))
+    LLModel.create_collection(str(doc.id), str(doc.id), doc.mime_type)
 
     return doc
 
@@ -107,11 +110,10 @@ def answer(
     if not doc:
         return {"message": "No existe el documento"}
 
-    # FIXME: message creation
     msg = ChatMessage(contents=question.text, is_ai=False, document_id=question.document_id)
     session.add(msg)
     session.commit()
     session.refresh(msg)
 
-    stream = LLModel.answer_with_context_from(str(doc.id), question.text, str(doc.id))
-    return StreamingResponse(stream_response(stream, session), media_type="text/event-stream")
+    stream = LLModel.answer_with_context_from(str(doc.id), question.text, str(doc.id), content_type=doc.mime_type)
+    return StreamingResponse(stream_response(stream, session, doc), media_type="text/event-stream")
