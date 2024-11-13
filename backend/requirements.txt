@@ -118,7 +118,7 @@ typing-inspect==0.9.0
 typing_extensions==4.12.2
 urllib3==2.2.3
 uvicorn==0.32.0
-uvloop==0.21.0
+# uvloop==0.21.0 comment this in windows environment
 watchfiles==0.24.0
 websocket-client==1.8.0
 websockets==14.0
