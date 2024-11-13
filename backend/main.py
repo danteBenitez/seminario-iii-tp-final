@@ -116,5 +116,5 @@ def answer(
     session.commit()
     session.refresh(msg)
 
-    stream = LLModel.answer_with_context_from(str(doc.id), question.text, str(doc.id), content_type=doc.mime_type)
+    stream = LLModel.answer_with_context_from(str(doc.id), question.text, str(doc.id), content_type=doc.mime_type, session_id=f"{doc.id}-{doc.user_id}")
     return StreamingResponse(stream_response(stream, session, doc), media_type="text/event-stream")
