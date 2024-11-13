@@ -3,3 +3,5 @@ chroma_db_dir
 data.db
 documents/
 chroma_db
+
+env/
