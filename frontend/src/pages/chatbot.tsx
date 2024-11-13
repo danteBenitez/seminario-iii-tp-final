@@ -14,6 +14,7 @@ import {
   Message,
 } from "@/features/chat/services/chat.service";
 import { getUserDocument } from "@/features/chat/services/documents.service";
+import useStreamerResponse from "@/features/chat/hooks/chat";
 
 export default function ChatBot() {
   const userState = useStore((state) => state);
@@ -35,62 +36,41 @@ export default function ChatBot() {
   });
 
   const isFirstMessage = messages?.length == 0;
-  const className = clsx({
-    "w-full flex items-center justify-center overflow-y-auto": isFirstMessage,
-    "w-full flex flex-col overflow-y-clip": !isFirstMessage,
-  });
+  const className = "flex flex-col justify-center  self-center w-full h-full";
 
   if (!param.id) {
     return (
-      <main className={"flex justify-center  self-center w-full h-full"}>
+      <main
+        className={"flex flex-col justify-center  self-center w-full h-full"}
+      >
         <DragAndDrop />
       </main>
     );
   }
 
   return (
-    <main className={className}>
+    <main className={"flex flex-col justify-center w-full h-full"}>
       <ChatHeader />
       <MessageList messages={messages} />
-      <ChatInput variant={isFirstMessage ? "centered" : "bottom"} />
     </main>
   );
 }
 
-export function ChatInput(props: { variant: "centered" | "bottom" }) {
-  if (props.variant == "centered") {
-    return (
-      <div className="w-full px-2 md:px-32 flex flex-col justify-center items-center gap-9">
-        <div className="flex">
-          <Logo />
-        </div>
-        <h2 className="font-sans-accent text-7xl font-bold text-center">
-          ¿Qué quieres preguntar hoy?
-        </h2>
-        <div className="relative flex w-full h-[4rem] rounded-full border border-1 drop-shadow-lg focus-within:ring-2">
-          <Bot className="absolute top-5 left-5 text-2xl" />
-          <Input
-            type="text"
-            placeholder="¿Qué receta vas a hacer hoy?"
-            className="mx-12 h-[4rem] rounded-full drop-shadow-lg focus-visible:ring-0 border-0"
-          />
-          <Button className="absolute top-3 right-5 text-2xl flex items-center justify-center m-0 py-3">
-            <Send />
-          </Button>
-        </div>
-      </div>
-    );
-  }
+export function ChatInput(props: { onSubmit: (message: string) => void }) {
+  const [text, setText] = useState("");
 
   return (
     <div className="mt-auto w-full px-12 py-4 rounded-full flex flex-col sticky bottom-0">
       <Textarea
-        name=""
+        onChange={(e) => setText(e.target.value)}
         className="rounded-md h-[4.5rem] text-2xl focus-visible:ring-2 focus-visible:ring-blue-300 bg-background"
         placeholder="Ingresa una pregunta sobre el documento"
       />
       <div className="border border-1 rounded-full justify-end absolute top-9 right-14">
-        <Button className="text-2xl flex items-center justify-center m-0 py-3">
+        <Button
+          onClick={() => props.onSubmit(text)}
+          className="text-2xl flex items-center justify-center m-0 py-3"
+        >
           <Send />
         </Button>
       </div>
@@ -125,17 +105,40 @@ export function ChatHeader() {
 }
 
 export function MessageList(props: { messages: Message[] | undefined }) {
+  const [question, setQuestion] = useState("");
+
+  const handleMessageSubmit = (message: string) => {
+    setQuestion(message);
+  };
+
   return (
-    <div className="flex flex-col gap-5 p-12 mt-7 overflow-y-scroll">
-      {props.messages?.map((msg) => {
-        const className = clsx({
-          "bg-gray-200 ms-auto p-7 rounded-lg max-w-[50%] text-right":
-            !msg.is_ai,
-          "bg-white me-auto p-7 rounded-lg border border-1 drop-shadow-md max-w-[50%]":
-            msg.is_ai,
-        });
-        return <div className={className}>{msg.contents}</div>;
-      })}
-    </div>
+    <>
+      <div className="flex-col gap-5 p-12 mt-7 overflow-y-scroll">
+        {props.messages?.map((msg) => {
+          return <MessageItem msg={msg} />;
+        })}
+        {question && <AnswerPreview question={question} />}
+      </div>
+      <ChatInput onSubmit={handleMessageSubmit} />
+    </>
   );
+}
+
+function AnswerPreview({ question }: { question: string }) {
+  const answer = useStreamerResponse({ question });
+
+  if (!answer) {
+    return null;
+  }
+
+  return <MessageItem msg={{ contents: answer, is_ai: true }} />;
+}
+
+function MessageItem({ msg }: { msg: Message }) {
+  const className = clsx({
+    "bg-gray-200 ms-auto p-7 rounded-lg max-w-[50%] text-right": !msg.is_ai,
+    "bg-white me-auto p-7 rounded-lg border border-1 drop-shadow-md max-w-[50%]":
+      msg.is_ai,
+  });
+  return <div className={className}>{msg.contents}</div>;
 }

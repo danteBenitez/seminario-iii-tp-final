@@ -1,21 +1,24 @@
 import { useEffect, useState } from "react";
-import Markdown from "react-markdown";
 import { getStreamedResponse } from "../services/chat.service";
 
-export function Chat() {
+export function useStreamerResponse({ question }: { question?: string }) {
   const [context, setContext] = useState<
     {
       page_content: string;
       metadata: string;
     }[]
   >([]);
+
   const [answer, setAnswer] = useState("");
 
   useEffect(() => {
+    if (!question) {
+      return;
+    }
     const controller = new AbortController();
     const getResponse = async () => {
       for await (const value of getStreamedResponse({
-        text: "¿Qué es Clean Code?",
+        text: question,
         controller,
       })) {
         if ("context" in value) {
@@ -32,12 +35,11 @@ export function Chat() {
     return () => controller.abort();
   }, []);
 
-  return (
-    <div>
-      <div></div>
-      <Markdown>{answer}</Markdown>
-    </div>
-  );
+  if (!question) {
+    return null;
+  }
+
+  return answer;
 }
 
-export default Chat;
+export default useStreamerResponse;

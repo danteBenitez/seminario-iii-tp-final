@@ -1,7 +1,7 @@
 import { readStream } from "../../../utils/read-stream";
 
 const resolveUrl = (url: string) => {
-  return new URL(import.meta.env.VITE_API_URL, url);
+  return new URL(url, import.meta.env.VITE_API_URL);
 };
 
 export type Message = {
@@ -14,7 +14,7 @@ export async function getUserDocumentMessages(
   document_id: string
 ) {
   try {
-    if (!user_id || !document_id) {
+    if (user_id == "" || document_id == "") {
       throw new Error("No se ha proporcionado un usuario ni documento");
     }
 
