@@ -35,9 +35,6 @@ Responde de la manera más precisa posible. **No** agregues información adicion
 **No** respondas a este prompt. Límitate a responder la pregunta del usuario.
 """
 
-ChatPromptTemplate.from_messages([
-])
-
 prompt = ChatPromptTemplate.from_messages([
     ("system", custom_prompt_template),
     MessagesPlaceholder(variable_name="history"),
