@@ -2,37 +2,56 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Logo } from "@/features/ui/logo";
+import { useStore } from "@/features/user/store";
 import clsx from "clsx";
 import { Book, Bot, Send } from "lucide-react";
 import { useState } from "react";
-
-type Message = {
-  contents: string;
-  is_ai: boolean;
-};
+import { useParams } from "react-router-dom";
+import { DragAndDrop } from "./home";
+import { useQuery } from "@tanstack/react-query";
+import {
+  getUserDocumentMessages,
+  Message,
+} from "@/features/chat/services/chat.service";
+import { getUserDocument } from "@/features/chat/services/documents.service";
 
 export default function ChatBot() {
-  const [messages] = useState<Message[]>([
-    {
-      contents:
-        "Hay muchas variaciones de los pasajes de Lorem Ipsum disponibles, pero la mayoría sufrió alteraciones en alguna manera, ya sea porque se le agregó humor, o palabras aleatorias que no parecen ni un poco creíbles. Si vas a utilizar un pasaje de Lorem Ipsum, necesitás estar seguro de que no hay nada avergonzante escondido en el medio del texto. Todos los generadores de Lorem Ipsum que se encuentran en Internet tienden a repetir trozos predefinidos cuando sea necesario, haciendo a este el único generador verdadero (válido) en la Internet. Usa un diccionario de mas de 200 palabras provenientes del latín, combinadas con estructuras muy útiles de sentencias, para generar texto de Lorem Ipsum que parezca razonable. Este Lorem Ipsum generado siempre estará libre de repeticiones, humor agregado o palabras no características del lenguaje, etc.",
-      is_ai: false,
-    },
-    {
-      contents:
-        "Hay muchas variaciones de los pasajes de Lorem Ipsum disponibles, pero la mayoría sufrió alteraciones en alguna manera, ya sea porque se le agregó humor, o palabras aleatorias que no parecen ni un poco creíbles. Si vas a utilizar un pasaje de Lorem Ipsum, necesitás estar seguro de que no hay nada avergonzante escondido en el medio del texto. Todos los generadores de Lorem Ipsum que se encuentran en Internet tienden a repetir trozos predefinidos cuando sea necesario, haciendo a este el único generador verdadero (válido) en la Internet. Usa un diccionario de mas de 200 palabras provenientes del latín, combinadas con estructuras muy útiles de sentencias, para generar texto de Lorem Ipsum que parezca razonable. Este Lorem Ipsum generado siempre estará libre de repeticiones, humor agregado o palabras no características del lenguaje, etc.",
-      is_ai: true,
-    },
-  ]);
-  const isFirstMessage = messages.length == 0;
+  const userState = useStore((state) => state);
+
+  const param = useParams();
+
+  const {
+    data: messages,
+    error,
+    isLoading,
+  } = useQuery({
+    queryFn: () =>
+      getUserDocumentMessages(userState.user_id || "", param.id || ""),
+    queryKey: [
+      "messages",
+      { user_id: userState.user_id, document_id: param.id },
+    ],
+    enabled: !!param.id && !!userState.user_id,
+  });
+
+  const isFirstMessage = messages?.length == 0;
   const className = clsx({
     "w-full flex items-center justify-center overflow-y-auto": isFirstMessage,
     "w-full flex flex-col overflow-y-clip": !isFirstMessage,
   });
+
+  if (!param.id) {
+    return (
+      <main className={"flex justify-center  self-center w-full h-full"}>
+        <DragAndDrop />
+      </main>
+    );
+  }
+
   return (
     <main className={className}>
       <ChatHeader />
-      <MessageList messages={[...messages, ...messages]} />
+      <MessageList messages={messages} />
       <ChatInput variant={isFirstMessage ? "centered" : "bottom"} />
     </main>
   );
@@ -80,20 +99,35 @@ export function ChatInput(props: { variant: "centered" | "bottom" }) {
 }
 
 export function ChatHeader() {
+  const userState = useStore((state) => state);
+
+  const param = useParams();
+
+  const {
+    data: document,
+    error,
+    isLoading,
+  } = useQuery({
+    queryFn: () => getUserDocument(userState.user_id || "", param.id || ""),
+    queryKey: [
+      "document",
+      { user_id: userState.user_id, document_id: param.id },
+    ],
+    enabled: !!param.id && !!userState.user_id,
+  });
+
   return (
     <h1 className="sticky top-0 p-4 border border-b flex gap-2 font-bold text-xl z-10 bg-background/30 backdrop-blur-md">
       <Book />
-      <span>Clean Code</span>
+      <span>{!isLoading && document?.original_filename}</span>
     </h1>
   );
 }
 
-export function MessageList(props: {
-  messages: { contents: string; is_ai: boolean }[];
-}) {
+export function MessageList(props: { messages: Message[] | undefined }) {
   return (
     <div className="flex flex-col gap-5 p-12 mt-7 overflow-y-scroll">
-      {props.messages.map((msg) => {
+      {props.messages?.map((msg) => {
         const className = clsx({
           "bg-gray-200 ms-auto p-7 rounded-lg max-w-[50%] text-right":
             !msg.is_ai,

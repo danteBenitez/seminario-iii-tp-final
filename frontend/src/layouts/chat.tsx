@@ -10,23 +10,29 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/features/ui/logo";
-import { FileTextIcon, MessageCircleIcon } from "lucide-react";
+import { FileText, PlusSquare } from "lucide-react";
 import { Outlet } from "react-router";
 
-const items = [
-  {
-    title: "Mis chats",
-    icon: MessageCircleIcon,
-    url: "/chat",
-  },
-  {
-    title: "Mis documentos",
-    icon: FileTextIcon,
-    url: "/chat/documents",
-  },
-];
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getUserDocuments } from "@/features/chat/services/documents.service";
+import { useStore } from "@/features/user/store";
+import { Link } from "react-router-dom";
 
 export function ChatLayout() {
+  const userState = useStore((state) => state);
+
+  const {
+    data: documents,
+    error,
+    isLoading,
+  } = useQuery({
+    queryFn: () => getUserDocuments(userState.user_id),
+    queryKey: ["documents", { user_id: userState.user_id }],
+    enabled: !!userState.user_id,
+  });
+
+  console.log(documents);
+
   return (
     <SidebarProvider>
       <div className="grid">
@@ -37,20 +43,31 @@ export function ChatLayout() {
           <SidebarContent>
             <SidebarGroupContent>
               <SidebarMenu>
-                {items.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild className="text-2xl">
-                      <a href={item.url} className="my-2">
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </a>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                <SidebarMenuItem key={"-nuevo-documento-"}>
+                  <SidebarMenuButton asChild className="text-2xl">
+                    <Link to={`/chat`}>
+                      <PlusSquare />
+                      <span className="text-lg text-clip">Nuevo Documento</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                {documents &&
+                  documents.map((item) => (
+                    <SidebarMenuItem key={item.id}>
+                      <SidebarMenuButton asChild className="text-2xl">
+                        <Link to={`/chat/${item.id}`}>
+                          <FileText />
+                          <span className="text-lg text-clip">
+                            {item.original_filename}
+                          </span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarContent>
-          <SidebarFooter>Volver</SidebarFooter>
+          {/* <SidebarFooter>Volver</SidebarFooter> */}
         </Sidebar>
       </div>
       <Outlet />
