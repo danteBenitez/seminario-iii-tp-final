@@ -102,7 +102,7 @@ async def get_my_documents(
     return docs
 
 @app.get('/api/users/{user_id}/documents/{document_id}', response_model=list[DocumentPublic])
-async def get_my_documents(
+async def get_my_document(
     session: SessionDep,
     user_id: str,
     document_id: str
