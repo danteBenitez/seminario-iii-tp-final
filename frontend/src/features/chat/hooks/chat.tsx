@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { getStreamedResponse } from "../services/chat.service";
 
-export function useStreamerResponse({
+type StreamingStatus = "started" | "pending" | "streaming" | "ended";
+
+export function useStreamedResponse({
   question,
   documentId,
 }: {
   question?: string;
   documentId: string;
 }) {
+  const [status, setStatus] = useState<StreamingStatus>("pending");
   const [context, setContext] = useState<
     {
       page_content: string;
@@ -23,6 +26,7 @@ export function useStreamerResponse({
     }
     const controller = new AbortController();
     const getResponse = async () => {
+      setStatus("streaming");
       for await (const value of getStreamedResponse({
         text: question,
         document_id: documentId,
@@ -35,6 +39,7 @@ export function useStreamerResponse({
           setAnswer((answer) => answer + value.answer);
         }
       }
+      setStatus("ended");
     };
 
     getResponse();
@@ -46,7 +51,7 @@ export function useStreamerResponse({
     return null;
   }
 
-  return answer;
+  return { answer, status, context };
 }
 
-export default useStreamerResponse;
+export default useStreamedResponse;

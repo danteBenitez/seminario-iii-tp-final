@@ -1,19 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useStore } from "@/features/user/store";
-import clsx from "clsx";
-import { Book, Bot, Send } from "lucide-react";
-import { useState } from "react";
-import { useParams } from "react-router-dom";
-import { DragAndDrop } from "./home";
-import { useQuery } from "@tanstack/react-query";
-import Markdown from "react-markdown";
+import useStreamedResponse from "@/features/chat/hooks/chat";
 import {
   getUserDocumentMessages,
   Message,
 } from "@/features/chat/services/chat.service";
 import { getUserDocument } from "@/features/chat/services/documents.service";
-import useStreamerResponse from "@/features/chat/hooks/chat";
+import { useStore } from "@/features/user/store";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import clsx from "clsx";
+import { Book, Bot, Send } from "lucide-react";
+import { useState } from "react";
+import Markdown from "react-markdown";
+import { useParams } from "react-router-dom";
+import { DragAndDrop } from "./home";
 
 export default function ChatBot() {
   const userState = useStore((state) => state);
@@ -112,15 +112,27 @@ export function MessageList(props: {
     setQuestion(message);
   };
 
+  const client = useQueryClient();
+
   return (
     <>
-      <div className="flex flex-col flex-1 m-5">
+      <div className="flex flex-col flex-1 m-5 gap-2">
         {props.messages?.map((msg, i) => {
           return <MessageItem key={`message-${i}`} msg={msg} />;
         })}
         {question && <MessageItem msg={{ contents: question, is_ai: false }} />}
         {question && (
-          <AnswerPreview question={question} documentId={props.documentId} />
+          <AnswerPreview
+            question={question}
+            documentId={props.documentId}
+            onFinish={() => {
+              setQuestion("");
+              client.invalidateQueries({
+                // TODO: Use a more specific key
+                queryKey: ["messages"],
+              });
+            }}
+          />
         )}
       </div>
       <ChatInput onSubmit={handleMessageSubmit} />
@@ -131,22 +143,38 @@ export function MessageList(props: {
 function AnswerPreview({
   question,
   documentId,
+  onFinish,
 }: {
   question: string;
   documentId: string;
+  onFinish: () => void;
 }) {
-  console.log("AnswerPreview", question, documentId);
+  const result = useStreamedResponse({ question, documentId });
 
-  const answer = useStreamerResponse({ question, documentId });
-
-  if (!answer) {
+  if (!result) {
     return null;
   }
+  const { answer, status } = result;
 
-  return <MessageItem msg={{ contents: answer, is_ai: true }} />;
+  if (status == "ended") {
+    onFinish();
+  }
+
+  return (
+    <MessageItem
+      msg={{ contents: answer, is_ai: true }}
+      isStreaming={status == "streaming"}
+    />
+  );
 }
 
-function MessageItem({ msg }: { msg: Message }) {
+function MessageItem({
+  msg,
+  isStreaming = false,
+}: {
+  msg: Message;
+  isStreaming?: boolean;
+}) {
   const className = clsx({
     "bg-gray-200 ms-auto p-7 rounded-lg max-w-[50%] text-right": !msg.is_ai,
     "bg-white me-auto p-7 rounded-lg border border-1 drop-shadow-md max-w-[70%]":
@@ -154,7 +182,11 @@ function MessageItem({ msg }: { msg: Message }) {
   });
   return (
     <div className={className}>
-      {msg.is_ai ? <Bot /> : <Send />}
+      {msg.is_ai ? (
+        <Bot className={isStreaming ? "animate-bounce" : ""} />
+      ) : (
+        <Send />
+      )}
       <Markdown>{msg.contents}</Markdown>
     </div>
   );
