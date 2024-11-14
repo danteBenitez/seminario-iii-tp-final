@@ -31,6 +31,7 @@ export default function ChatBot() {
       "messages",
       { user_id: userState.user_id, document_id: param.id },
     ],
+    staleTime: Infinity,
     enabled: !!param.id && !!userState.user_id,
   });
 
@@ -158,6 +159,8 @@ function AnswerPreview({
 
   if (status == "ended") {
     onFinish();
+  } else if (status == "pending") {
+    return null;
   }
 
   return (
