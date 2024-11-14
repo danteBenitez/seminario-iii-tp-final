@@ -38,9 +38,11 @@ export async function getUserDocumentMessages(
 
 export async function* getStreamedResponse({
   text,
+  document_id,
   controller,
-}: {
+} : {
   text: string;
+  document_id: string;
   controller: AbortController;
 }) {
   const response = await fetch(resolveUrl("/api/answer"), {
@@ -49,7 +51,7 @@ export async function* getStreamedResponse({
       "content-type": "application/json",
     },
     signal: controller.signal,
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, document_id }),
   });
 
   if (!response.body) throw new Error("No body");

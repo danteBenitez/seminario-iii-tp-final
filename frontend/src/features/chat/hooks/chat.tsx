@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { getStreamedResponse } from "../services/chat.service";
 
-export function useStreamerResponse({ question }: { question?: string }) {
+export function useStreamerResponse({
+  question,
+  documentId,
+}: {
+  question?: string;
+  documentId: string;
+}) {
   const [context, setContext] = useState<
     {
       page_content: string;
@@ -19,6 +25,7 @@ export function useStreamerResponse({ question }: { question?: string }) {
     const getResponse = async () => {
       for await (const value of getStreamedResponse({
         text: question,
+        document_id: documentId,
         controller,
       })) {
         if ("context" in value) {
@@ -33,7 +40,7 @@ export function useStreamerResponse({ question }: { question?: string }) {
     getResponse();
 
     return () => controller.abort();
-  }, []);
+  }, [documentId, question]);
 
   if (!question) {
     return null;
