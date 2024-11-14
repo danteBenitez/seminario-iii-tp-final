@@ -12,15 +12,16 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.chat_message_histories import SQLChatMessageHistory
 
 import pathlib
+import config
 
-llm = ChatOllama(model="llama3.2:1b") 
+llm = ChatOllama(model=config.LLM_MODEL_NAME) 
 
-client = chromadb.PersistentClient(path="./chroma_db_dir")
+client = chromadb.PersistentClient(path=config.CHROMA_DIR)
 
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=500) 
 
-persist_db = "chroma_db_dir" 
-embed_model = FastEmbedEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+persist_db = config.CHROMA_DIR
+embed_model = FastEmbedEmbeddings(model_name=config.EMBED_MODEL_NAME)
 
 custom_prompt_template = """
 Eres un chatbot personalizado para responder preguntas sobre un documento subido por el mismo usuario.
@@ -48,7 +49,7 @@ MIME_TO_LOADER = {
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": Docx2txtLoader
 }
 
-class LLModel:
+class RAGModel:
     @staticmethod
     def answer_with_context_from(document_name: str, question: str, collection_name: str, *, content_type: str, session_id: str):
         file_path = pathlib.Path("./documents", f"{document_name}")
@@ -83,14 +84,14 @@ class LLModel:
         with_memory = RunnableWithMessageHistory(
             chain,
             lambda session_id: SQLChatMessageHistory(
-                session_id=session_id, connection_string="sqlite:///database.db"
+                session_id=session_id, connection_string=f"sqlite:///{config.DATABASE_NAME}"
             ),
             input_messages_key="input",
             history_messages_key="history",
             output_messages_key="answer"
         )
-        config = {"configurable": {"session_id": session_id }}
-        return with_memory.stream({"input":question }, config=config)
+        chain_config = {"configurable": {"session_id": session_id }}
+        return with_memory.stream({"input":question }, config=chain_config)
 
     @staticmethod
     def create_collection(collection_name: str, document_name: str, content_type: str):
