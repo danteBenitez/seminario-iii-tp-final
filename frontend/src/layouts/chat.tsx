@@ -37,12 +37,7 @@ import { Link } from "react-router-dom";
 export function ChatLayout() {
   const userState = useStore((state) => state);
 
-  const {
-    data: documents,
-    error,
-    isLoading,
-    refetch,
-  } = useQuery({
+  const { data: documents } = useQuery({
     queryFn: () => getUserDocuments(userState.user_id),
     queryKey: ["documents", { user_id: userState.user_id }],
     enabled: !!userState.user_id,
@@ -59,10 +54,15 @@ export function ChatLayout() {
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem key={"-nuevo-documento-"}>
-                  <SidebarMenuButton asChild className="text-2xl">
-                    <Link to={`/chat`}>
-                      <PlusSquare />
-                      <span className="text-lg text-clip">Nuevo Documento</span>
+                  <SidebarMenuButton className="max-h-auto h-[5rem]">
+                    <Link
+                      to={`/chat`}
+                      className="text-2xl flex items-center gap-2"
+                    >
+                      <PlusSquare className="text-2xl" />
+                      <span className="text-2xl text-clip">
+                        Nuevo Documento
+                      </span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
