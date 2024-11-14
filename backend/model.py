@@ -108,6 +108,11 @@ class LLModel:
             persist_directory=persist_db,
             collection_name=collection_name
         )
+    
+    @staticmethod
+    def delete_collection(collection_name: str):
+        collection_name = f"document-{collection_name}"
+        client.delete_collection(collection_name)
 
 
 

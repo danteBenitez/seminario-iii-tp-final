@@ -101,13 +101,25 @@ async def get_my_documents(
     docs = session.exec(select(Document).where(Document.user_id==user_id))
     return docs
 
+@app.delete('/api/users/{user_id}/documents/{document_id}')
+async def delete_document(
+    session: SessionDep,
+    document_id: str,
+    user_id: str
+):
+    doc = session.exec(select(Document).where(Document.user_id==user_id).where(Document.id == document_id)).one_or_none()
+    session.delete(doc)
+    session.commit()
+    LLModel.delete_collection(str(doc.id))
+    return doc
+
 @app.get('/api/users/{user_id}/documents/{document_id}', response_model=DocumentPublic)
 async def get_my_document(
     session: SessionDep,
     user_id: str,
     document_id: str
 ):
-    doc = session.exec(select(Document).where(Document.user_id==user_id).where(Document.id == document_id)).one()
+    doc = session.exec(select(Document).where(Document.user_id==user_id).where(Document.id == document_id)).one_or_none()
     return doc
 
 @app.post("/api/answer")
