@@ -31,8 +31,6 @@ export function ChatLayout() {
     enabled: !!userState.user_id,
   });
 
-  console.log(documents);
-
   return (
     <SidebarProvider>
       <div className="grid">
