@@ -11,7 +11,7 @@ class Document(DocumentBase, table=True):
     original_filename: str = Field()
     mime_type: str = Field()
 
-    messages: list["ChatMessage"] = Relationship()
+    messages: list["ChatMessage"] = Relationship(cascade_delete=True)
 
 class DocumentPublic(DocumentBase):
     pass 

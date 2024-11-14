@@ -14,6 +14,8 @@ from random import randbytes
 
 import pathlib
 
+import mimetypes
+
 from json import dumps
 
 USER_ID_LEN = 32
@@ -83,7 +85,6 @@ async def upload_document(
     with open(full_path, "wb") as f:
         f.write(await file.read())
 
-    print("Subido archivo")
     # Start the collection creation on the background to speed up the document returning.
     background.add_task(RAGModel.create_collection, str(doc.id), str(doc.id), doc.mime_type)
 
