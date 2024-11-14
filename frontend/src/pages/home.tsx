@@ -53,6 +53,10 @@ export default function Home() {
                 <img src="/icons/pdf.png" className="h-8 w-8" />
                 <span className="text-xl text-bold">PDF</span>
               </div>
+              <div className="flex gap-2 border border-1 rounded-full p-4 me-5 my-3">
+                <img src="/icons/docx.png" className="h-8 w-8" />
+                <span className="text-xl text-bold">DOCX</span>
+              </div>
             </div>
           </div>
           <DragAndDrop />
