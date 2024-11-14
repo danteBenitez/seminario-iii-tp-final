@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/features/ui/logo";
 import { useStore } from "@/features/user/store";
+import { resolveUrl } from "@/utils/resolve-url";
 import { useQueryClient } from "@tanstack/react-query";
 import { MoveRight, UploadCloud } from "lucide-react";
 import { useCallback } from "react";
@@ -78,7 +79,7 @@ export function DragAndDrop() {
       if (userState.user_id)
         formData.append("user_id", userState.user_id || "");
 
-      const response = await fetch("http://localhost:8000/api/upload", {
+      const response = await fetch(resolveUrl("/api/upload"), {
         method: "POST",
         body: formData,
       });
@@ -126,7 +127,7 @@ export function DragAndDrop() {
       <Input
         {...getInputProps()}
         id="dropzone-file"
-        accept="application/pdf"
+        accept="application/pdf,.docx"
         type="file"
         className="hidden"
       />
