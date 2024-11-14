@@ -15,7 +15,7 @@ import pathlib
 
 llm = ChatOllama(model="llama3.2:1b") 
 
-client = chromadb.PersistentClient(path="./chroma_db")
+client = chromadb.PersistentClient(path="./chroma_db_dir")
 
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=500) 
 
