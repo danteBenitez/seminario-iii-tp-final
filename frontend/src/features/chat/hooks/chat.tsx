@@ -18,7 +18,7 @@ export function useStreamerResponse({
   const [answer, setAnswer] = useState("");
 
   useEffect(() => {
-    if (!question) {
+    if (!question || !documentId) {
       return;
     }
     const controller = new AbortController();
