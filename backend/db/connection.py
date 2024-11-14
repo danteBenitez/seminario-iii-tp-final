@@ -3,8 +3,9 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlmodel import Session, SQLModel, create_engine 
+import config
 
-sqlite_file_name = "database.db"
+sqlite_file_name = config.DATABASE_NAME
 sqlite_url = f"sqlite:///{sqlite_file_name}"
 
 connect_args = {"check_same_thread": False}
