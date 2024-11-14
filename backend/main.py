@@ -131,6 +131,7 @@ def answer(
 
     msg = ChatMessage(contents=question.text, is_ai=False, document_id=question.document_id)
     session.add(msg)
+    session.commit()
 
     stream = RAGModel.answer_with_context_from(str(doc.id), question.text, str(doc.id), content_type=doc.mime_type, session_id=f"{doc.id}-{doc.user_id}")
     return StreamingResponse(stream_response(stream, session, doc), media_type="text/event-stream")
