@@ -1,8 +1,6 @@
+import { resolveUrl } from "@/utils/resolve-url";
 import { readStream } from "../../../utils/read-stream";
 
-const resolveUrl = (url: string) => {
-  return new URL(url, import.meta.env.VITE_API_URL);
-};
 
 export type Message = {
   contents: string;
@@ -40,7 +38,7 @@ export async function* getStreamedResponse({
   text,
   document_id,
   controller,
-} : {
+}: {
   text: string;
   document_id: string;
   controller: AbortController;
