@@ -59,6 +59,12 @@ export function ChatInput(props: { onSubmit: (message: string) => void }) {
       <Textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key == "Enter" && e.ctrlKey) {
+            props.onSubmit(text);
+            setText("");
+          }
+        }}
         className="rounded-md h-[4.5rem] text-2xl focus-visible:ring-2 focus-visible:ring-blue-300 bg-background"
         placeholder="Ingresa una pregunta sobre el documento"
       />
@@ -129,7 +135,6 @@ export function MessageList(props: {
             onFinish={() => {
               setQuestion("");
               client.invalidateQueries({
-                // TODO: Use a more specific key
                 queryKey: ["messages"],
               });
             }}
