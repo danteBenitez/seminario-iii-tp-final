@@ -69,19 +69,18 @@ export function ChatLayout() {
                 {documents &&
                   documents.map((item) => (
                     <SidebarMenuItem key={item.id}>
-                      <SidebarMenuButton className="text-3xl h-[5rem] flex gap-2 relative">
-                        <DocumentLogoWithDelete
-                          document_id={item.id.toString()}
-                        />
-                        <Link
-                          to={`/chat/${item.id}`}
-                          className="flex items-center group"
-                        >
-                          <span className="text-lg text-clip">
-                            {item.original_filename}
-                          </span>
-                        </Link>
-                      </SidebarMenuButton>
+                      <Link to={`/chat/${item.id}`}>
+                        <SidebarMenuButton className="text-3xl h-[5rem] flex gap-2 relative">
+                          <DocumentLogoWithDelete
+                            document_id={item.id.toString()}
+                          />
+                          <div className="flex items-center group">
+                            <span className="text-lg text-clip">
+                              {item.original_filename}
+                            </span>
+                          </div>
+                        </SidebarMenuButton>
+                      </Link>
                     </SidebarMenuItem>
                   ))}
               </SidebarMenu>
@@ -109,6 +108,9 @@ export function DocumentLogoWithDelete({
     onSuccess() {
       client.invalidateQueries({
         queryKey: ["documents"],
+      });
+      client.invalidateQueries({
+        queryKey: ["messages"],
       });
     },
   });
