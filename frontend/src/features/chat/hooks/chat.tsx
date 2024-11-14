@@ -11,12 +11,6 @@ export function useStreamedResponse({
   documentId: string;
 }) {
   const [status, setStatus] = useState<StreamingStatus>("pending");
-  const [context, setContext] = useState<
-    {
-      page_content: string;
-      metadata: string;
-    }[]
-  >([]);
 
   const [answer, setAnswer] = useState("");
 
@@ -32,12 +26,7 @@ export function useStreamedResponse({
         document_id: documentId,
         controller,
       })) {
-        if ("context" in value) {
-          setContext((context) => [...context, value.context]);
-        }
-        if ("answer" in value) {
-          setAnswer((answer) => answer + value.answer);
-        }
+        setAnswer((answer) => answer + value);
       }
       setStatus("ended");
     };
@@ -51,7 +40,7 @@ export function useStreamedResponse({
     return null;
   }
 
-  return { answer, status, context };
+  return { answer, status };
 }
 
 export default useStreamedResponse;

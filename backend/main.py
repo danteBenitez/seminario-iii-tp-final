@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from validation.question_validation import Question
 
-from model import LLModel
+from model import RAGModel
 from db.chat_model import ChatMessage
 from db.document_model import Document, DocumentPublic
 from db.connection import create_db_and_tables, SessionDep
@@ -37,16 +37,12 @@ pathlib.Path('./documents').mkdir(exist_ok=True, parents=True)
 def stream_response(stream, session: Session, doc: Document):
     answer = ""
     for chunk in stream:
-        dict = {}
         print(chunk)
 
-        if "context" in chunk:
-            dict["context"] = list(map(lambda c: { "page_content": c.page_content, "metadata": c.metadata }, chunk["context"]))
         if "answer" in chunk:
-            dict["answer"] = str(chunk["answer"])
             answer += chunk["answer"]
+            yield f"{chunk['answer']}"
 
-        yield f"{dumps(dict)}\n"
 
     msg = ChatMessage(contents=answer, is_ai=True, document_id=doc.id)
     session.add(msg)
@@ -89,7 +85,7 @@ async def upload_document(
 
     print("Subido archivo")
     # Start the collection creation on the background to speed up the document returning.
-    background.add_task(LLModel.create_collection, str(doc.id), str(doc.id), doc.mime_type)
+    background.add_task(RAGModel.create_collection, str(doc.id), str(doc.id), doc.mime_type)
 
     return doc
 
@@ -110,7 +106,7 @@ async def delete_document(
     doc = session.exec(select(Document).where(Document.user_id==user_id).where(Document.id == document_id)).one_or_none()
     session.delete(doc)
     session.commit()
-    LLModel.delete_collection(str(doc.id))
+    RAGModel.delete_collection(str(doc.id))
     return doc
 
 @app.get('/api/users/{user_id}/documents/{document_id}', response_model=DocumentPublic)
@@ -137,5 +133,5 @@ def answer(
     session.commit()
     session.refresh(msg)
 
-    stream = LLModel.answer_with_context_from(str(doc.id), question.text, str(doc.id), content_type=doc.mime_type, session_id=f"{doc.id}-{doc.user_id}")
+    stream = RAGModel.answer_with_context_from(str(doc.id), question.text, str(doc.id), content_type=doc.mime_type, session_id=f"{doc.id}-{doc.user_id}")
     return StreamingResponse(stream_response(stream, session, doc), media_type="text/event-stream")

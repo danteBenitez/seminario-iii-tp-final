@@ -59,6 +59,6 @@ export async function* getStreamedResponse({
 
   for await (const chunk of readStream(stream.getReader())) {
     if (chunk.done) break;
-    yield JSON.parse(chunk.value);
+    yield chunk.value;
   }
 }
