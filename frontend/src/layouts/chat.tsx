@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Logo } from "@/features/ui/logo";
 import { FileText, PlusSquare, X } from "lucide-react";
-import { Outlet } from "react-router";
+import { Outlet, useNavigate } from "react-router";
 
 import {
   AlertDialog,
@@ -112,6 +112,7 @@ export function DocumentLogoWithDelete({
       });
     },
   });
+  const navigate = useNavigate();
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
@@ -140,7 +141,9 @@ export function DocumentLogoWithDelete({
           <AlertDialogAction
             variant={"destructive"}
             className="rounded-md"
-            onClick={() => deleteDoc(document_id)}
+            onClick={() =>
+              deleteDoc(document_id).then(() => navigate("/chat/"))
+            }
           >
             Eliminar
           </AlertDialogAction>
