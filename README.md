@@ -11,10 +11,10 @@
 
 ```bash
 #por ejemplo, para instalar el modelo 3b de ollama, ejecutamos el siguiente comando
-ollama pull llama:3.2:3b
+ollama pull llama3.2:3b
 
 #así también podes instalar el modelo 1b
-ollama pull llama:3.2:1b
+ollama pull llama3.2:1b
 ```
 
 ### Dentro de la carpeta nombre backend
