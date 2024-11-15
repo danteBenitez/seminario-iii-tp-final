@@ -14,7 +14,7 @@ from langchain_community.chat_message_histories import SQLChatMessageHistory
 import pathlib
 import config
 
-llm = ChatOllama(model=config.LLM_MODEL_NAME) 
+llm = ChatOllama(model=config.LLM_MODEL_NAME) # LLM_MODEL_NAME=llama3.2:3b
 
 client = chromadb.PersistentClient(path=config.CHROMA_DIR)
 
@@ -44,6 +44,7 @@ prompt = ChatPromptTemplate.from_messages([
 
 combine_documents = create_stuff_documents_chain(llm, prompt)
 
+# Map MIME Types to appropiate loaders for those types
 MIME_TO_LOADER = {
     "application/pdf": PyMuPDFLoader,
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": Docx2txtLoader
@@ -52,27 +53,38 @@ MIME_TO_LOADER = {
 class RAGModel:
     @staticmethod
     def answer_with_context_from(document_name: str, question: str, collection_name: str, *, content_type: str, session_id: str):
+        """
+        Asks the RAG model a question using info provided by the document `document_name`.
+        If necesarry creates a collection `collection_name` to store the processed results.
+
+        Takes the content_type to load the text properly if needed, and a session_id for
+        retrieving passed conversations.
+
+        :returns A stream of dictionaries with "answer" and "context" keys specifying
+                 the result of running the LLM.
+        """
         file_path = pathlib.Path("./documents", f"{document_name}")
         try:
             loader = MIME_TO_LOADER[content_type](str(file_path.absolute()))
         except Exception as err:
             print("Error al cargar PDF: ", err)
             raise err
-        data_pdf = loader.load()
 
         collection_name = f"document-{collection_name}"
+        # Create the ChromaDB collection and split the text only if it doesn't exist already
         try:
             client.get_collection(collection_name)
-            chunks = text_splitter.split_documents(data_pdf)
-            vs = Chroma.from_documents(
-                documents=chunks,
-                embedding=embed_model,
+            vs = Chroma(
+                embedding_function=embed_model,
                 persist_directory=persist_db,
                 collection_name=collection_name
             )
         except chromadb.errors.InvalidCollectionException as err:
-            vs = Chroma(
-                embedding_function=embed_model,
+            data_pdf = loader.load()
+            chunks = text_splitter.split_documents(data_pdf)
+            vs = Chroma.from_documents(
+                documents=chunks,
+                embedding=embed_model,
                 persist_directory=persist_db,
                 collection_name=collection_name
             )
@@ -95,6 +107,9 @@ class RAGModel:
 
     @staticmethod
     def create_collection(collection_name: str, document_name: str, content_type: str):
+        """
+        Creates a collection for the RAGModel to use in future questions asked to it.
+        """
         file_path = pathlib.Path("./documents", document_name)
         loader = MIME_TO_LOADER[content_type](file_path)
         data_pdf = loader.load()
@@ -112,6 +127,10 @@ class RAGModel:
     
     @staticmethod
     def delete_collection(collection_name: str):
+        """
+        Deletes a collection so it cannot be used to store document data for the RAGModel
+        to consume
+        """
         collection_name = f"document-{collection_name}"
         client.delete_collection(collection_name)
 
