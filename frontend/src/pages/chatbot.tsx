@@ -65,9 +65,22 @@ export function ChatInput(props: { onSubmit: (message: string) => void }) {
             setText("");
           }
         }}
-        className="rounded-md h-[4.5rem] text-2xl focus-visible:ring-2 focus-visible:ring-blue-300 bg-background"
-        placeholder="Ingresa una pregunta sobre el documento"
+        placeholder=" "
+        className="rounded-md h-[6rem] text-2xl focus-visible:ring-2 focus-visible:ring-blue-300 bg-background peer"
       />
+      <div className="absolute top-6 left-2 px-14 h-[1rem] peer-[:placeholder-shown]:opacity-100 opacity-0 text-muted">
+        <p className="text-sm text-muted-foreground">
+          Ingrese una pregunta sobre el documento. (
+          <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+            <span className="text-xs">Ctrl</span>
+          </kbd>
+          +
+          <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+            <span className="text-xs">Enter</span>
+          </kbd>
+          para enviar).
+        </p>
+      </div>
       <div className="border border-1 rounded-full justify-end absolute top-9 right-14">
         <Button
           onClick={() => {
