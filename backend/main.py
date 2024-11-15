@@ -14,15 +14,12 @@ from random import randbytes
 
 import pathlib
 
-import mimetypes
-
 from json import dumps
 
 USER_ID_LEN = 32
 
 def on_startup():
     create_db_and_tables()
-
 
 app = FastAPI(on_startup=[on_startup])
 
@@ -36,19 +33,6 @@ app.add_middleware(
 
 pathlib.Path('./documents').mkdir(exist_ok=True, parents=True)
 
-def stream_response(stream, session: Session, doc: Document):
-    answer = ""
-    for chunk in stream:
-        print(chunk)
-
-        if "answer" in chunk:
-            answer += chunk["answer"]
-            yield f"{chunk['answer']}"
-
-
-    msg = ChatMessage(contents=answer, is_ai=True, document_id=doc.id)
-    session.add(msg)
-    session.commit()
 
 @app.get('/api/users/{user_id}/{document_id}/messages')
 def get_messages(
@@ -56,6 +40,9 @@ def get_messages(
     user_id: str,
     document_id: str
 ):
+    """
+    Get all the messages associated to a user and a document
+    """
     msgs = session.exec(select(ChatMessage).join(Document).where(Document.user_id == user_id).where(Document.id == document_id)).all()
     return list(msgs)
 
@@ -66,10 +53,12 @@ async def upload_document(
     file: UploadFile,
     user_id: Annotated[str | None, Form()] = "",
 ): 
+    """
+    Uploads a file and stores it as a document to be used in future questions.
+    """
     if not user_id or len(user_id) <= USER_ID_LEN:
         user_id = randbytes(USER_ID_LEN).hex()
 
-    # FIXME: Validate MIME Type correctly 
     if not file.content_type or (file.content_type != "application/pdf" and file.content_type != "application/vnd.openxmlformats-officedocument.wordprocessingml.document"):
         return {"message": "Tipo de archivo inválido"}
 
@@ -95,6 +84,9 @@ async def get_my_documents(
     session: SessionDep,
     user_id: str
 ):
+    """
+    Get all documents uploaded using a given user_id
+    """
     docs = session.exec(select(Document).where(Document.user_id==user_id))
     return docs
 
@@ -104,6 +96,9 @@ async def delete_document(
     document_id: str,
     user_id: str
 ):
+    """
+    Delete a document given its ID and its User's ID 
+    """
     doc = session.exec(select(Document).where(Document.user_id==user_id).where(Document.id == document_id)).one_or_none()
     session.delete(doc)
     session.commit()
@@ -116,6 +111,9 @@ async def get_my_document(
     user_id: str,
     document_id: str
 ):
+    """
+    Gets a document given its ID and its User's ID 
+    """
     doc = session.exec(select(Document).where(Document.user_id==user_id).where(Document.id == document_id)).one_or_none()
     return doc
 
@@ -124,6 +122,10 @@ def answer(
     question: Question,
     session: SessionDep
 ):
+    """
+    Asks a question based on a document and streams the response back. It takes
+    the desired document ID.
+    """
     doc = session.exec(select(Document).where(Document.id == question.document_id)).one_or_none()
 
     if not doc:
@@ -135,3 +137,17 @@ def answer(
 
     stream = RAGModel.answer_with_context_from(str(doc.id), question.text, str(doc.id), content_type=doc.mime_type, session_id=f"{doc.id}-{doc.user_id}")
     return StreamingResponse(stream_response(stream, session, doc), media_type="text/event-stream")
+
+def stream_response(stream, session: Session, doc: Document):
+    answer = ""
+    for chunk in stream:
+        print(chunk)
+
+        if "answer" in chunk:
+            answer += chunk["answer"]
+            yield f"{chunk['answer']}"
+
+
+    msg = ChatMessage(contents=answer, is_ai=True, document_id=doc.id)
+    session.add(msg)
+    session.commit()
