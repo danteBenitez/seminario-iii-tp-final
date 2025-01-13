@@ -33,6 +33,10 @@ body {
   height: 100%;
 }
 
+.markdown > * {
+  all: revert;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

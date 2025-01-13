@@ -208,7 +208,7 @@ function MessageItem({
       ) : (
         <Send />
       )}
-      <Markdown>{msg.contents}</Markdown>
+      <Markdown className={'markdown'}>{msg.contents}</Markdown>
     </div>
   );
 }
