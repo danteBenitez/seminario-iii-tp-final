@@ -14,6 +14,7 @@ charset-normalizer==3.4.0
 chroma-hnswlib==0.7.6
 chromadb==0.5.18
 click==8.1.7
+colorama==0.4.6
 coloredlogs==15.0.1
 dataclasses-json==0.6.7
 Deprecated==1.2.14
@@ -42,13 +43,14 @@ idna==3.10
 importlib_metadata==8.5.0
 importlib_resources==6.4.5
 Jinja2==3.1.4
+joblib==1.4.2
 jsonpatch==1.33
 jsonpointer==3.0.0
 kubernetes==31.0.0
 langchain==0.3.7
 langchain-chroma==0.1.4
 langchain-community==0.3.5
-langchain-core==0.3.15
+langchain-core==0.3.40
 langchain-ollama==0.2.0
 langchain-text-splitters==0.3.2
 langsmith==0.1.142
@@ -94,6 +96,7 @@ Pygments==2.18.0
 PyMuPDF==1.24.13
 PyPika==0.48.9
 pyproject_hooks==1.2.0
+pyreadline3==3.5.4
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 python-multipart==0.0.17
@@ -103,6 +106,8 @@ requests-oauthlib==2.0.0
 requests-toolbelt==1.0.0
 rich==13.9.4
 rsa==4.9
+scikit-learn==1.6.1
+scipy==1.15.2
 shellingham==1.5.4
 six==1.16.0
 sniffio==1.3.1
@@ -111,6 +116,7 @@ sqlmodel==0.0.22
 starlette==0.41.2
 sympy==1.13.3
 tenacity==9.0.0
+threadpoolctl==3.5.0
 tokenizers==0.20.3
 tqdm==4.67.0
 typer==0.13.0
@@ -118,10 +124,10 @@ typing-inspect==0.9.0
 typing_extensions==4.12.2
 urllib3==2.2.3
 uvicorn==0.32.0
-# uvloop==0.21.0 comment this in windows environment
 watchfiles==0.24.0
 websocket-client==1.8.0
 websockets==14.0
+win32-setctime==1.1.0
 wrapt==1.16.0
 yarl==1.17.1
 zipp==3.21.0
