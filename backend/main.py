@@ -76,7 +76,7 @@ async def upload_document(
 
     # Start the collection creation on the background to speed up the document returning.
     background.add_task(RAGModel.create_collection, str(doc.id), str(doc.id), doc.mime_type)
-
+    
     return doc
 
 @app.get('/api/users/{user_id}/documents', response_model=list[DocumentPublic])
@@ -103,6 +103,8 @@ async def delete_document(
     session.delete(doc)
     session.commit()
     RAGModel.delete_collection(str(doc.id))
+    full_path = pathlib.Path("./documents", str(doc.id))
+    full_path.unlink()
     return doc
 
 @app.get('/api/users/{user_id}/documents/{document_id}', response_model=DocumentPublic)
