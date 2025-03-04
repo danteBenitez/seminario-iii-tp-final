@@ -24,17 +24,8 @@ client = chromadb.PersistentClient(path=config.CHROMA_DIR)
 
 text_splitter = RecursiveCharacterTextSplitter(
     separators=[
-        "\n\n" "\n",
-        ".",
-        "?",
-        "!",
-        ";",
-        ":",
-        "...",
-        " ",
-        "\t",
-        "\r\n",
-        "\r",
+        "\n\n",
+        "\n",
     ],
     chunk_size=2000,
     chunk_overlap=300,
@@ -148,26 +139,25 @@ class RAGModel:
         print("Inicio de la creación de colección, creación del text_splitter")
         text_splitter = RecursiveCharacterTextSplitter(
             separators=[
-                "\n\n" "\n",
-                ".",
-                " ",
+                "\n\n",
+                "\n \n",
+                "\n",
             ],
-            chunk_size=1500,
+            chunk_size=1000,
             chunk_overlap=200,
         )
         print("Cargando el documento, creando chunks")
         chunks = text_splitter.split_documents(data_pdf)
 
-        # for chunk in chunks[0:10]:
-        #     print(
-        #         "==================================== INICIO ===================================="
-        #     )
-        #     print(chunk)
-        #     print(
-        #         "==================================== FIN ===================================="
-        #     )
+        for chunk in chunks[0:10]:
+            print(
+                "==================================== INICIO CHUNK ===================================="
+            )
+            print(chunk)
+            print(
+                "==================================== FIN CHUNK ===================================="
+            )
         print("Chunks creados, generamos el embedding de cada chunk")
-
         embeddings = embed_model.embed_documents(
             [chunk.page_content for chunk in chunks]
         )
@@ -189,7 +179,7 @@ class RAGModel:
         print("Chunks semánticos agrupados")
 
         for i, chunk_text in enumerate(semantic_chunks.values()):
-            print(f"Chunk {i+1}:")
+            print(f"Chunk Semánticos {i+1}:")
             print(chunk_text)
             print("---")  # Separador opcional
 
@@ -199,8 +189,8 @@ class RAGModel:
 
         try:
 
-            vs = Chroma.from_documents(
-                documents=list(semantic_chunks.values()),
+            vs = Chroma.from_texts(
+                texts=list(semantic_chunks.values()),
                 embedding=embed_model,
                 persist_directory=persist_db,
                 collection_name=collection_name,
